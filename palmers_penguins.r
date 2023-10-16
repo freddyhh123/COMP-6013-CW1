@@ -1,6 +1,7 @@
 library(palmerpenguins)
 library(caTools)
 library(class)
+library(caret)
 data(penguins)
 
 # any(is.na(penguins))
@@ -18,33 +19,37 @@ penguins <- na.omit(penguins)
 # dev.off()
 
 
-set.seed(140)
+set.seed(122)
 training_rows <- sample(1:nrow(penguins), replace = F, size = nrow(penguins) * 0.7)
+tc <- trainControl(method = "cv", number = 10)
 
 # Training set
 train_penguins <- penguins[training_rows, -c(2, 8)]
-train_penguins$species <- as.numeric(train_penguins$species)
-train_penguins$sex <- as.numeric(train_penguins$sex)
 train_label <- train_penguins$species
+train_penguins <- scale(train_penguins[c("bill_length_mm","bill_depth_mm","flipper_length_mm","body_mass_g")])
+
 
 # Testing set
 test_penguins <- penguins[-training_rows, -c(2, 8)]
-test_penguins$species <- as.numeric(test_penguins$species)
-test_penguins$sex <- as.numeric(test_penguins$sex)
-test_label <- test_penguins$species
-
-knn.15 <- knn(train = train_penguins, test = test_penguins, cl = train_label, k = 15)
-knn.10 <- knn(train = train_penguins, test = test_penguins, cl = train_label, k = 10)
-knn.1 <- knn(train = train_penguins, test = test_penguins, cl = train_label, k = 1)
+test_penguins <- scale(test_penguins[c("bill_length_mm","bill_depth_mm","flipper_length_mm","body_mass_g")])
+test_label <- penguins[-training_rows,1]
 
 i <- 1
 k.optm <- 1
 
-for (i in 1:30) {
-  knn.mod <- knn(train = train_penguins, test = test_penguins, cl = train_label, k = i)
-  k.optm[i] <- 100 * sum(test_label == knn.mod) / NROW(test_label)
-  k <- i
-  cat(k, "=", k.optm[i], "")
-}
 
-plot(k.optm, type = "b", xlab = "K-Value", ylab = "Accuracy Percentage (%)")
+kvalue <- train(train_penguins, train_label,
+             method     = "knn",
+             tuneGrid   = expand.grid(k = 1:30),
+             trControl  = tc,
+             metric     = "Accuracy")
+
+
+#for (i in 1:30) {
+#  knn.mod <- knn(train = train_penguins, test = test_penguins, cl = train_label$species, k = i)
+#  k.optm[i] <- 100 * sum(test_label$species == knn.mod) / NROW(test_label$species)
+#  k <- i
+#  cat(k, "=", k.optm[i], "")
+#}
+
+plot(kvalue.results, type = "b", xlab = "K-Value", ylab = "Accuracy Percentage (%)")
