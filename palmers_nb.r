@@ -38,18 +38,11 @@ i <- 1
 k.optm <- 1
 
 
-kvalue <- train(train_penguins, train_label,
-             method     = "knn",
-             tuneGrid   = expand.grid(k = 1:30),
+nb <- train(train_penguins, train_label,
+             method     = "nb",
              trControl  = tc,
              metric     = "Accuracy")
 
 
-#for (i in 1:30) {
-#  knn.mod <- knn(train = train_penguins, test = test_penguins, cl = train_label$species, k = i)
-#  k.optm[i] <- 100 * sum(test_label$species == knn.mod) / NROW(test_label$species)
-#  k <- i
-#  cat(k, "=", k.optm[i], "")
-#}
 
-plot(kvalue.results, type = "b", xlab = "K-Value", ylab = "Accuracy Percentage (%)")
+plot(kvalue, type = "b", xlab = "K-Value", ylab = "Accuracy Percentage (%)")
