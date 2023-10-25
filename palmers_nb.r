@@ -28,7 +28,5 @@ nb <- train(train_penguins, train_label,
              method     = "nb",
              trControl  = tc,
              metric     = "Accuracy")
-
-
 nb
 plot(nb, type = "b", xlab = "K-Value", ylab = "Accuracy Percentage (%)")
