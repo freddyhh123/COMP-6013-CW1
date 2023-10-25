@@ -7,8 +7,8 @@ data(penguins)
 
 penguins <- na.omit(penguins)
 
-set.seed(122)
-training_rows <- sample(1:nrow(penguins), replace = F, size = nrow(penguins) * 0.7)
+set.seed(123)
+training_rows <- sample(1:nrow(penguins), replace = F, size = nrow(penguins) * 0.6)
 
 
 # Training set
@@ -30,7 +30,7 @@ rotate <- pca_data$rotation[, 1:3]
 pca_train <- as.matrix(train_penguins) %*% (rotate)
 pca_test <- as.matrix(test_penguins) %*% (rotate)
 
-k <- 1:25
+k <- 1:10
 k_train_errors <- numeric(length(k))
 k_test_errors <- numeric(length(k))
 k_val_errors <- numeric(length(k))
@@ -64,20 +64,23 @@ for (i in 1:length(k)) {
     k_test_errors[i] <- 1 - confusionMatrix(predict(knn, pca_test), as.factor(test_label$species))$overall["Accuracy"]
     k_val_errors[i] <- 1 - mean(val_fold_errors)
 }
-plot(k, k_test_errors, type = "l", col = "blue", 
-     xlab = "k Value", ylab = "Error Rate (%)", main = "k-NN Error Rates vs. k Values")
-lines(k, k_train_errors, col = "red")
-lines(k, k_val_errors, col = "green")
-legend("topright", legend = c("Test Error", "Train Error", "Validation Error"),
-       col = c("blue", "red", "green"), lty = 1)
-
-best_k <- which.min(k_val_errors) + 1
+best_k <- which.min(k_val_errors)
 knn_best <- train(
     x = pca_train,
     y = train_label,
     method = "knn",
     tuneGrid = data.frame(k = best_k)
 )
+
+y_min <- min(k_train_errors, k_test_errors)
+y_max <- max(k_train_errors, k_test_errors)
+plot(k, k_test_errors, type = "l", col = "blue", 
+     xlab = "k Value", ylab = "Error Rate (%)", main = "Error rates vs K-value with CV and PCA", ylim = c(y_min, y_max))
+lines(k, k_train_errors, col = "red")
+lines(k, k_val_errors, col = "green")
+legend("topright", legend = c("Test Error", "Train Error", "Validation Error"),
+       col = c("blue", "red", "green"), lty = 1)
+abline(v = best_k, col = "black", lty = 2)
 
 test_predictions <- predict(knn_best, pca_test)
 matrix <- confusionMatrix(data = test_predictions, reference = test_label$species)
